@@ -41,3 +41,35 @@ Branch: `wip/boutique-eval-suite` (created from main; Mark's uncommitted noteboo
 ## Step 3 -- Housekeeping
 - `eval_results/*.json` are not gitignored. Decide whether to commit them (they are the baseline to compare against) or add to .gitignore.
 - Notebook diff: only the tasks cell, judge cell, new sanity cell and judge-tasks cell changed in source (outputs of those cells cleared). Mark's earlier uncommitted output changes are still in the file, uncommitted.
+
+## Fix loop (Part 5). Rule: one change per round, same 32 tasks x 5 runs, compare to baseline. Baseline committed as d6c5851.
+Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
+
+### Change 1: system prompt only
+- New prompt: names the shop, says every price comes from `get_product`, never ask the customer for a price, look up then `calculate` for totals/discounts/tax/splits, say so if a product is not in the catalog.
+- Result file `eval_results/eval_default_20261023_094733.json`: passes per run [22, 24, 23, 23, 21] (mean 22.4/32). No net gain.
+- What moved: tax_hat 0/5 -> 4/5, split_jacket 0 -> 2/5. REGRESSIONS: catalog_shirt/jacket 5/5 -> 0/5, catalog_shorts 1/5, catalog_sweater 1/5, catalog_tshirt 2/5, shoes_not_in_catalog 5/5 -> 0/5, what_do_you_sell 5/5 -> 1/5.
+- Diagnosis from transcripts: calling it a "clothing boutique" made the agent assume many styles of each item and ask "which jacket/shirt?" without calling the tool. It does not know `get_product` takes a bare item name, because the tool description is just "get_product". Root cause is now the tool spec, not the prompt.
+- Decision: keep the prompt (its intent is right) and fix the tool descriptions next, as its own change.
+
+### Change 2: tool descriptions (on top of change 1)
+- `get_product`: says what it returns (USD price), that each item has one fixed price (no styles), lists the 12 catalog names, notes it errors for unknown names; param says lowercase catalog name with `t-shirt`/`jeans` examples. `calculate`: states `input1 op input2` and the operator set; params described.
+- Result file `eval_results/eval_default_20261023_094935.json`: passes per run [31, 31, 31, 31, 31] of 32 (from mean 23.2). Everything passes except shoes_not_in_catalog (0/5).
+- shoes diagnosis: the agent now answers "I don't see shoes in our catalog, but we carry sneakers, want the price?" with NO tool call, because the catalog is listed in the tool description. That response is correct and honest. The failing grade is my `tool_use get_product` check, which was a proxy for "doesn't invent a price". The judge check already tests the real behavior (no price for "shoes" without explanation) and passes.
+
+### Change 3: grader fix (shoes task) -- NOT an agent change
+- Removed the `tool_use get_product` grader from shoes_not_in_catalog; the judge check stays. This loosens a test after seeing results, so it is recorded here deliberately: the old check encoded an implementation detail (must call the tool), not the requirement (no invented price).
+- Result file `eval_results/eval_default_20261023_095133.json`: passes per run [32, 32, 32, 32, 32] of 32.
+
+### Summary of the loop (mean passes of 32, 5 runs each)
+| Step | Mean | Notes |
+|---|---|---|
+| Baseline, agent unchanged | 23.2 | agent asks customer for prices |
+| + system prompt | 22.4 | fixed tax/split, broke plain lookups ("which jacket?") |
+| + tool descriptions | 31.0 | only shoes failing, due to over-strict grader |
+| + shoes grader fix | 32.0 | saturated |
+
+### Caveats
+- The suite is now saturated (100%), so it can no longer reveal regressions that stay under that ceiling. Next useful steps: harder tasks (ambiguous phrasing, multi-turn corrections), or run the same suite on another model (`run_eval(..., model=...)`).
+- 5 runs is a small sample; stable here because failures were systematic.
+- Judge criteria for off_topic and capabilities are my product assumptions; confirm with Mark.
