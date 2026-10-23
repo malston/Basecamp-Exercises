@@ -74,7 +74,8 @@ class TaskDefinitionTest(unittest.TestCase):
             for marker, _ in run_eval.HELDOUT_SETS.values():
                 exec(run_eval.find_cell(cells, marker), ns)
         cls.ns = ns
-        cls.all_tasks = ns["tasks"] + ns["llm_judge_tasks"] + ns["heldout_tasks"] + ns["heldout_tasks_2"]
+        cls.all_tasks = (ns["tasks"] + ns["llm_judge_tasks"] + ns["heldout_tasks"]
+                         + ns["heldout_tasks_2"] + ns["heldout_tasks_3"])
         sanity = run_eval.find_cell(cells, "# Grader sanity checks")
         exec(sanity.split("failures = 0")[0], ns)
 
@@ -82,6 +83,7 @@ class TaskDefinitionTest(unittest.TestCase):
         self.assertEqual(len(self.ns["tasks"]) + len(self.ns["llm_judge_tasks"]), 32)
         self.assertEqual(len(self.ns["heldout_tasks"]), 10)
         self.assertEqual(len(self.ns["heldout_tasks_2"]), 8)
+        self.assertEqual(len(self.ns["heldout_tasks_3"]), 10)
 
     def test_ids_and_queries_are_unique(self):
         ids = [t["id"] for t in self.all_tasks]

@@ -142,3 +142,9 @@ Verification after the fixes: unit tests 11/11, sanity passes, full suite [32, 3
 
 ## Exercise notebook restored
 - The merge of PR #1 replaced the exercise notebook with the solved one. `Building_an_Eval.ipynb` is restored to its pre-merge exercise form (commit a4efc87); the solved notebook now lives at `Building_an_Eval_solution.ipynb`. `run_eval.py`, the unit tests and CI default to the solution notebook. The measurements above were taken on the solved notebook.
+
+## Held-out set 3: everyday tasks (10 tasks, written after set 1 and 2, never tuned on)
+- Purpose: check that the 9.6/10 on held-out set 1 was not a one-off. Fresh phrasings of totals, discounts, tax, change, comparisons, a max-price lookup and an order-of-operations question. Notebook cell "Held-out set 3" in `Building_an_Eval_solution.ipynb`; stage `heldout3` in run_eval.py; added to the nightly CI job.
+- Fixed agent, 5 runs: [10, 10, 10, 10, 10] of 10 (100%). Original agent (same graders): [7, 8, 7, 7, 8] (mean 7.4/10, 74%).
+- Original agent misses: ho3_most_expensive 0/5, ho3_discount_basket 1/5, ho3_change_from_fifty 1/5. Same pattern as before: with a one-line prompt and bare tool descriptions it often asks the customer for prices or skips the lookups.
+- Set 1 and set 3 agree (original 7.4/10 both times; fixed 9.6 and 10), so the gain from the prompt and tool-description fixes holds up on fresh questions. Set 2 (negative tasks) still shows no gain.

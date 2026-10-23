@@ -118,7 +118,7 @@ jobs:
             echo "::error::ANTHROPIC_API_KEY is not set. Add it as a repository secret."
             exit 1
           fi
-          for stage in heldout heldout2; do
+          for stage in heldout heldout2 heldout3; do
             out="$RUNNER_TEMP/$stage.txt"
             if ! .venv/bin/python -I run_eval.py "$stage" --runs 3 > "$out" 2>&1; then
               cat "$out"
@@ -128,7 +128,7 @@ jobs:
           done
           {
             echo '## Held-out scores'
-            for stage in heldout heldout2; do
+            for stage in heldout heldout2 heldout3; do
               echo "### $stage"
               echo '```'
               sed -n '/Per-task pass rate/,$p' "$RUNNER_TEMP/$stage.txt"
