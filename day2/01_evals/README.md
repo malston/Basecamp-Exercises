@@ -39,15 +39,18 @@ The setup cell verifies your key with a real API call — green banner means you
 
 ### From a shell (no Jupyter)
 
-[`run_eval.py`](run_eval.py) runs the notebook's cells headless and executes one stage. Run it from this folder with the project venv:
+[`run_eval.py`](run_eval.py) runs the notebook's cells headless and executes one stage. Run it from this folder with the repo's `.venv` active (see SETUP.md):
 
 ```bash
-.venv/bin/python run_eval.py sanity              # grader sanity checks only
-.venv/bin/python run_eval.py single              # one run of the 32-task suite
-.venv/bin/python run_eval.py baseline --runs 5   # 5 runs, per-task pass rates
-.venv/bin/python run_eval.py heldout --runs 5    # the 10 held-out tasks
-.venv/bin/python run_eval.py heldout2 --runs 5   # 8 negative and adversarial held-out tasks
-.venv/bin/python run_eval.py --help              # all options
+python run_eval.py sanity              # grader sanity checks only
+python run_eval.py single              # one run of the 32-task suite
+python run_eval.py baseline --runs 5   # 5 runs, per-task pass rates
+python run_eval.py heldout --runs 5    # the 10 held-out tasks
+python run_eval.py heldout2 --runs 5   # 8 negative and adversarial held-out tasks
+python run_eval.py --help              # all options
+python -m unittest test_run_eval -v     # offline tests, no API calls
 ```
 
-For CI, add `--min-pass-rate 0.9` to exit 1 when the mean pass rate (across all tasks and runs) falls below 90%. Your key comes from `ANTHROPIC_API_KEY` or a `.env` file, same as the notebook. Each run saves a JSON file to `eval_results/`.
+`single` and `baseline` include the 7 judge tasks, so their totals are out of 32; the notebook's Part 4 cells run only the 25 deterministic tasks.
+
+For CI, add `--min-pass-rate 0.97` to exit 1 when the mean pass rate (across all tasks and runs) falls below 97%. It exits 2 if any attempt errored, so an outage is not read as a regression. Your key comes from `ANTHROPIC_API_KEY` (or the Bedrock variables) or a `.env` file, same as the notebook. Every stage except `sanity` saves a JSON file to `eval_results/`.

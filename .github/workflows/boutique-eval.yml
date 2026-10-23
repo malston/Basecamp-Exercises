@@ -1,11 +1,12 @@
 # Boutique agent eval.
-#   regression: on pull requests that touch the exercise, runs the 32-task suite 3 times and
-#               fails the check if the mean pass rate is below MIN_PASS_RATE.
-#   heldout:    nightly (and on demand), runs both held-out sets and reports the scores.
-#               It never fails the build on a score: reading these failures to tune the agent
-#               would turn the held-out tasks into practice material.
-# Needs the repository secret ANTHROPIC_API_KEY. Pull requests from forks get no secrets,
-# so the regression job skips itself there.
+#   regression: on pull requests that touch the exercise, and on manual dispatch, runs the offline
+#               unit tests, the grader sanity checks, then the 32-task suite 3 times, and fails the
+#               check if the mean pass rate is below MIN_PASS_RATE or any attempt errored.
+#   heldout:    nightly (and on demand), runs both held-out sets and reports the scores without
+#               failing the build on them. A crash or a missing key still fails the job.
+# Needs the repository secret ANTHROPIC_API_KEY. A missing key fails the job on same-repo runs.
+# Pull requests from forks get no secrets: the regression job runs only the offline unit tests,
+# writes "NOT RUN" to the job summary and reports success without running the eval.
 name: boutique-eval
 
 on:
@@ -21,16 +22,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: boutique-eval-${{ github.ref }}
+  group: boutique-eval-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
+    shell: bash
     working-directory: day2/01_evals
 
 env:
-  MIN_PASS_RATE: "0.9"
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  MIN_PASS_RATE: "0.97"
 
 jobs:
   regression:
@@ -40,31 +41,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for API key
-        id: key
-        run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "::warning::ANTHROPIC_API_KEY is not available (pull request from a fork?). Skipping the eval."
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/setup-python@v5
-        if: steps.key.outputs.available == 'true'
         with:
           python-version: "3.12"
+
+      - name: Offline unit tests
+        run: python -m unittest test_run_eval -v
+
+      - name: Check for API key
+        id: key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FROM_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          elif [ "$FROM_FORK" = "true" ]; then
+            echo "::warning::No API key on a pull request from a fork. The eval was NOT RUN."
+            echo "## NOT RUN: no API key on a pull request from a fork" >> "$GITHUB_STEP_SUMMARY"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::ANTHROPIC_API_KEY is not set. Add it as a repository secret."
+            exit 1
+          fi
 
       - name: Create venv (the notebook's setup cell refuses to install outside one)
         if: steps.key.outputs.available == 'true'
         run: python -m venv .venv
 
+      - name: Remove committed results so the artifact holds only this run
+        if: steps.key.outputs.available == 'true'
+        run: rm -rf eval_results
+
       - name: Grader sanity checks
         if: steps.key.outputs.available == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: .venv/bin/python -I run_eval.py sanity
 
       - name: Regression suite
         if: steps.key.outputs.available == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: .venv/bin/python -I run_eval.py baseline --runs 3 --min-pass-rate "$MIN_PASS_RATE"
 
       - name: Upload results
@@ -73,7 +91,7 @@ jobs:
         with:
           name: eval-results-regression
           path: day2/01_evals/eval_results/
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   heldout:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -89,17 +107,34 @@ jobs:
       - name: Create venv
         run: python -m venv .venv
 
+      - name: Remove committed results so the artifact holds only this run
+        run: rm -rf eval_results
+
       - name: Held-out sets (report only)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY is not set. Add it as a repository secret."
+            exit 1
+          fi
+          for stage in heldout heldout2; do
+            out="$RUNNER_TEMP/$stage.txt"
+            if ! .venv/bin/python -I run_eval.py "$stage" --runs 3 > "$out" 2>&1; then
+              cat "$out"
+              exit 1
+            fi
+            cat "$out"
+          done
           {
             echo '## Held-out scores'
             for stage in heldout heldout2; do
               echo "### $stage"
               echo '```'
-              .venv/bin/python -I run_eval.py "$stage" --runs 3 | sed -n '/Per-task pass rate/,$p'
+              sed -n '/Per-task pass rate/,$p' "$RUNNER_TEMP/$stage.txt"
               echo '```'
             done
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         if: always()
@@ -107,4 +142,4 @@ jobs:
         with:
           name: eval-results-heldout
           path: day2/01_evals/eval_results/
-          if-no-files-found: ignore
+          if-no-files-found: error

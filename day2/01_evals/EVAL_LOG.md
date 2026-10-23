@@ -1,6 +1,6 @@
 # Eval work log: boutique shopping assistant
 
-Branch: `wip/boutique-eval-suite` (created from main; Mark's uncommitted notebook output changes carried along, not committed).
+Branch: `wip/boutique-eval-suite` (created from main).
 
 ## 2026-10-23 09:3x -- Orientation
 
@@ -33,7 +33,7 @@ Branch: `wip/boutique-eval-suite` (created from main; Mark's uncommitted noteboo
 
 ### Diagnosis (read every failing transcript, then counted causes across all 5 runs)
 
-1. Agent asks the customer for the price instead of calling `get_product`. Zero tool calls in split_jacket, discount_jacket, discount_sneakers, tax_hat, catalog_dress, total_shirts_belts (4 of 5 fails). Pattern: queries that do not contain "price"/"cost"/"how much" (e.g. "What's 20% off a jacket?", "what's my total?") are treated as math problems missing a number. Cause: system prompt does not say the agent works for a shop with a catalog, and the tool descriptions are the tool names. Category: system prompt + tool spec. This is a fair failure; the grader is right.
+1. Agent asks the customer for the price instead of calling `get_product`. Zero tool calls in split_jacket, discount_jacket, discount_sneakers, tax_hat, catalog_dress, total_shirts_belts (all 5 runs, except total_shirts_belts: 4 of 5 runs). Pattern: queries that do not contain "price"/"cost"/"how much" (e.g. "What's 20% off a jacket?", "what's my total?") are treated as math problems missing a number. Cause: system prompt does not say the agent works for a shop with a catalog, and the tool descriptions are the tool names. Category: system prompt + tool spec. This is a fair failure; the grader is right.
 2. catalog_dress: agent asks "which dress?" in all 5 runs. Same cause family (no catalog context); "dress" is the one item name that sounds like a category.
 3. piano_not_in_catalog: agent calls the tool, gets `Error: 'piano'`, then volunteers general-knowledge piano price ranges. Fair failure (invented prices outside the catalog). Cause: system prompt (nothing says "only quote catalog prices"); tool error text is a bare KeyError.
 4. capabilities: agent says "look up details about products", never says "prices". Judge fails the "prices" check. Borderline but defensible: criterion was written from the notebook's own example. Cause: tool descriptions.
@@ -44,8 +44,8 @@ Branch: `wip/boutique-eval-suite` (created from main; Mark's uncommitted noteboo
 
 ## Step 3 -- Housekeeping
 
-- `eval_results/*.json` are not gitignored. Decide whether to commit them (they are the baseline to compare against) or add to .gitignore.
-- Notebook diff: only the tasks cell, judge cell, new sanity cell and judge-tasks cell changed in source (outputs of those cells cleared). Mark's earlier uncommitted output changes are still in the file, uncommitted.
+- `eval_results/*.json` are committed as the baseline to compare against.
+- Notebook diff: only the tasks cell, judge cell, new sanity cell and judge-tasks cell changed in source (outputs of those cells cleared).
 
 ## Fix loop (Part 5). Rule: one change per round, same 32 tasks x 5 runs, compare to baseline. Baseline committed as d6c5851
 
@@ -54,8 +54,8 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 ### Change 1: system prompt only
 
 - New prompt: names the shop, says every price comes from `get_product`, never ask the customer for a price, look up then `calculate` for totals/discounts/tax/splits, say so if a product is not in the catalog.
-- Result file `eval_results/eval_default_20261023_094733.json`: passes per run [22, 24, 23, 23, 21] (mean 22.4/32). No net gain.
-- What moved: tax_hat 0/5 -> 4/5, split_jacket 0 -> 2/5. REGRESSIONS: catalog_shirt/jacket 5/5 -> 0/5, catalog_shorts 1/5, catalog_sweater 1/5, catalog_tshirt 2/5, shoes_not_in_catalog 5/5 -> 0/5, what_do_you_sell 5/5 -> 1/5.
+- Result file `eval_results/eval_default_20261023_094733.json`: passes per run [22, 24, 23, 23, 21] (mean 22.6/32). No net gain.
+- Main moves: tax_hat 0/5 -> 4/5, split_jacket 0 -> 2/5, total_shirts_belts 1/5 -> 5/5. REGRESSIONS: catalog_shirt/jacket 5/5 -> 0/5, catalog_hat 3/5, catalog_sneakers 4/5, catalog_shorts 1/5, catalog_sweater 1/5, catalog_tshirt 2/5, shoes_not_in_catalog 5/5 -> 0/5, what_do_you_sell 5/5 -> 1/5.
 - Diagnosis from transcripts: calling it a "clothing boutique" made the agent assume many styles of each item and ask "which jacket/shirt?" without calling the tool. It does not know `get_product` takes a bare item name, because the tool description is just "get_product". Root cause is now the tool spec, not the prompt.
 - Decision: keep the prompt (its intent is right) and fix the tool descriptions next, as its own change.
 
@@ -75,7 +75,7 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 | Step | Mean | Notes |
 | --- | --- | --- |
 | Baseline, agent unchanged | 23.2 | agent asks customer for prices |
-| + system prompt | 22.4 | fixed tax/split, broke plain lookups ("which jacket?") |
+| + system prompt | 22.6 | fixed tax/split, broke plain lookups ("which jacket?") |
 | + tool descriptions | 31.0 | only shoes failing, due to over-strict grader |
 | + shoes grader fix | 32.0 | saturated |
 
@@ -105,7 +105,7 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 ## CI
 - `run_eval.py --min-pass-rate RATE` added (exit 1 below RATE, exit 2 for a bad value). Tested with real runs (pass, fail, bad value) and an offline check of the rate function.
 - Workflow `.github/workflows/boutique-eval.yml` (repo root). `regression` job on PRs touching day2/01_evals: sanity stage, then `baseline --runs 3 --min-pass-rate 0.9`. `heldout` job nightly and on demand: runs both held-out sets, report only, never fails the build on a score.
-- Validated YAML syntax only. NOT run on GitHub yet. Needs the repo secret ANTHROPIC_API_KEY; fork PRs have no secrets and skip the eval with a warning.
+- Needs the repo secret ANTHROPIC_API_KEY. Fork PRs have no secrets: the regression job runs only the offline unit tests and writes NOT RUN to the job summary. First run on GitHub is the PR #1 check described under Change 4.
 
 ## Change 4: rounding line in the system prompt (from the CI failure)
 - Trigger: CI run (3 runs) failed split_jacket once. Transcript from the artifact: tools called correctly, `calculate` returned 29.996666..., agent wrote "$29.97" (should be $30.00). A model rounding error in the final text; the grader was right.
@@ -116,3 +116,26 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 - Held-out set 2 x5 after (report only): [7, 7, 8, 8, 8], mean 95% (was 7.4/8 = 92.5%).
 - Caveat: 27/30 vs 30/30 is a small sample (3 misses vs 0; not statistically conclusive on its own). The mechanism supports it: every earlier miss was the same rounding slip, and the new line targets exactly that. The held-out sets did not get worse.
 - Result files from the scratch measurements were not saved; full-suite and held-out result JSONs are in eval_results/.
+
+## PR review (pr-review-toolkit: code, error handling, test coverage, comments) and fixes
+Fixed (critical and important):
+- Sanity stage could never fail CI: `run_eval.py sanity` now exits 1 when any grader misjudges. Verified with a deliberately broken numeric grader (exit 1).
+- Held-out job hid crashes (pipe without pipefail): output goes to a file first; a crash or missing key fails the job. Scores still never gate.
+- Regression job went green with no API key: now fails on same-repo runs; fork PRs run only the offline tests and write NOT RUN to the job summary.
+- Stale committed results were uploaded as the run's artifact: results are removed before the eval and the upload errors if nothing was written.
+- Errors folded into the pass rate: `Errored attempts: N` is printed and, with `--min-pass-rate`, any error exits 2.
+- Gate too loose (0.9 lets a whole task break): MIN_PASS_RATE is now 0.97 (3 misses in 96 attempts fails).
+- Judge failures: the judge now raises when `stop_reason` is not `end_turn`, so truncation or refusal shows as a grader error.
+- Empty reply passed `response_not_contains`: an empty response now scores 0.
+- `calculate` returned the string "None" for an unknown operator: it now raises, so the agent sees `Error: unsupported operator`.
+- Rounding was not tested: discount_jacket, discount_sneakers and tax_hat now fail if the answer contains 71.992, 63.7415 or 21.5892.
+- `response_numeric` regex read the hyphen in "12-14" as a minus sign: fixed, with a sanity case. Added sanity cases for tool_use (previously none) and bare integer checks.
+- Added test_run_eval.py (11 offline tests: pass-rate maths, marker uniqueness, task schema and ids, deterministic grader cases) and a CI step that runs it before any paid call.
+- `--runs 0` and missing cell markers now give clear messages instead of tracebacks.
+- Docs: wrong mean for Change 1 (22.4 -> 22.6), stale notebook markdown (Part 5, task-marker text, "Implement it", grader table), stale comment on FAST_MODEL, temporal wording in a comment, README/docstring venv path, stale lines in this log.
+Not fixed (suggestions or judgment calls):
+- No max-turns cap on the agent loop (the 30-minute job timeout bounds it).
+- `response_numeric` still accepts any number in the text within tolerance (a correct number in a wrong sentence passes).
+- Unpinned `anthropic` in CI; the `$` check in ho2_single_char can fail a correct reply that cites a real price; held-out tasks left untouched on purpose.
+- Merging puts the solved notebook on main, replacing the participant scaffolding. Flagged to Mark.
+Verification after the fixes: unit tests 11/11, sanity passes, full suite [32, 32, 32, 32, 32] at exit 0 with --min-pass-rate 0.97, held-out 1 mean 9.6/10, held-out 2 mean 7.4/8 (unchanged).
