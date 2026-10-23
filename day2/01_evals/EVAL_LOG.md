@@ -73,3 +73,11 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 - The suite is now saturated (100%), so it can no longer reveal regressions that stay under that ceiling. Next useful steps: harder tasks (ambiguous phrasing, multi-turn corrections), or run the same suite on another model (`run_eval(..., model=...)`).
 - 5 runs is a small sample; stable here because failures were systematic.
 - Judge criteria for off_topic and capabilities are my product assumptions; confirm with Mark.
+
+## Held-out check (prompted by a reviewer note: the 32 tasks were used to write the fixes, so 32/32 overstates generalization)
+- Wrote 10 new tasks in new phrasings AFTER the fixes (notebook cell "Held-out tasks"). Not used to change the agent or any grader. Ran 5 times against both the original agent (from commit d6c5851) and the fixed agent.
+- Fixed agent: passes per run [9, 10, 10, 9, 10] of 10 (mean 9.6). Original agent: [6, 7, 7, 9, 8] of 10 (mean 7.4).
+- Original agent per-task: ho_cheapest_item 0/5, ho_change_from_forty 2/5, ho_sweaters_belt 3/5, ho_dress_vs_jacket 3/5, ho_discount_two_items 4/5, others 5/5.
+- Fixed agent only miss: ho_sweatshirt 3/5. It answers "A sweatshirt (sweater) is $54.99" with `get_product("sweater")`, or adds a one-line note. My judge criterion assumed the nearest item is the hoodie (44.99), which is arguable (sweater is also a reasonable match), so this is part real (price given without saying sweatshirt is not a catalog item) and part ambiguous grading. Left as is: these tasks stay held-out and are not tuned.
+- Honest read: the fixes help (7.4 -> 9.6 of 10, roughly +22 points), but the tuned-on-suite jump (23.2 -> 32 of 32, about +27 points) was a bit larger than what fresh questions show, and the original agent was already fairly good on this fresh set because several held-out phrasings contain "cost"/"how much". The number to quote is the held-out one.
+- Housekeeping: one unexplained result file (25 tasks, 1 run, created during the original-agent held-out run) was deleted rather than kept; it was not part of any reported number. Cause not found.
