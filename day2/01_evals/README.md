@@ -39,7 +39,7 @@ The setup cell verifies your key with a real API call — green banner means you
 
 ### From a shell (no Jupyter)
 
-[`run_eval.py`](run_eval.py) runs the notebook's cells headless and executes one stage. Run it from this folder with the repo's `.venv` active (see SETUP.md):
+[`run_eval.py`](run_eval.py) runs the cells of the finished notebook, [`Building_an_Eval_solution.ipynb`](Building_an_Eval_solution.ipynb), headless and executes one stage. `Building_an_Eval.ipynb` is the exercise with blank cells; the solution holds the completed tasks, judge and tuned agent. Run it from this folder with the repo's `.venv` active (see SETUP.md):
 
 ```bash
 python run_eval.py sanity              # grader sanity checks only
