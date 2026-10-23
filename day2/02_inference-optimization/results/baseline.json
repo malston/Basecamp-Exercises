@@ -1,0 +1,232 @@
+{
+  "saved": "2026-10-23 11:11:21",
+  "rows": [
+    {
+      "id": "C-101",
+      "fields": {
+        "auto_renewal": true,
+        "change_of_control": false,
+        "liability_cap_usd": 250000,
+        "governing_law": "Delaware",
+        "risk_tier": "LOW",
+        "evidence": {
+          "auto_renewal": "\u00a72: 'This Agreement automatically renews for successive twelve (12) month periods unless either party gives written notice of non-renewal at least sixty (60) days before the end of the then-current term.' Genuine evergreen; 60-day notice window clears the sub-30-day watch list but is short of the integration office's preferred 90+ days (note only).",
+          "change_of_control": "\u00a75: 'Either party may assign this Agreement to an affiliate or in connection with a merger or sale of substantially all assets without the consent of the other party, upon written notice.' Free assignment, notice-only, no consent requirement and no termination right on change of control \u2014 not a change-of-control restriction. Favourable for Aldgate's acquisition.",
+          "liability_cap_usd": "\u00a74: 'EACH PARTY'S AGGREGATE LIABILITY ... SHALL NOT EXCEED TWO HUNDRED FIFTY THOUSAND U.S. DOLLARS ($250,000).' Stated in USD; no conversion needed despite German GmbH supplier. Confidentiality breaches carved out of the cap (\u00a74/\u00a76) \u2014 does not alter the reported figure per playbook. No amendment deleting or rewriting the cap present in the provided text.",
+          "governing_law": "\u00a77: 'governed by the laws of the State of Delaware, without regard to conflicts of law principles.' Governing law, not venue.",
+          "risk_tier": "LOW: no change-of-control restriction (\u00a75 free assignment) AND a cap is stated (\u00a74 $250,000). Neither red flag present."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 33.81035816698568,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18128,
+          "cw": 0,
+          "cr": 0,
+          "out": 2519
+        }
+      },
+      "cost": 0.153615
+    },
+    {
+      "id": "C-102",
+      "fields": {
+        "auto_renewal": false,
+        "change_of_control": false,
+        "liability_cap_usd": 100000,
+        "governing_law": "New York",
+        "risk_tier": "LOW",
+        "evidence": {
+          "auto_renewal": "\u00a72 \u2014 'This Agreement expires at the end of the term and does not renew automatically; any extension requires a written amendment signed by both parties.' Fixed-term/mutual-amendment pattern, not evergreen. No notice window.",
+          "change_of_control": "\u00a75 \u2014 'Either party may freely assign this Agreement, including in connection with any change of control, without consent.' Free assignment; no consent requirement and no termination right.",
+          "liability_cap_usd": "\u00a74 \u2014 'Contractor's total cumulative liability under this Agreement shall not exceed ONE HUNDRED THOUSAND U.S. DOLLARS ($100,000).' Single aggregate cap in USD; no carve-outs; no amendment present in the document to override or delete the cap.",
+          "governing_law": "\u00a77 \u2014 'The laws of the State of New York govern this Agreement.' Governing law, not venue.",
+          "risk_tier": "Neither red flag present: no change-of-control restriction (\u00a75 free assignment) AND a cap is stated (\u00a74 = $100,000). Per rule, LOW. Note: \u00a76 insurance limit of $2,000,000 is not a liability cap and was not used."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 34.43899708299432,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18372,
+          "cw": 0,
+          "cr": 0,
+          "out": 2886
+        }
+      },
+      "cost": 0.16401
+    },
+    {
+      "id": "C-103",
+      "fields": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": 500000,
+        "governing_law": "California",
+        "risk_tier": "MEDIUM",
+        "evidence": {
+          "auto_renewal": "Clause 2: 'automatically renewing for successive one-year terms unless either party provides ninety (90) days' written notice of termination.' Genuine evergreen auto-renewal; 90-day notice window (above watch-list threshold).",
+          "change_of_control": "Clause 5: 'Neither party may assign this Agreement, whether by operation of law, change of control, merger, or otherwise, without the prior written consent of the other party, such consent not to be unreasonably withheld.' Change-of-control consent restriction; unreasonable-withholding softener does not remove it. Will be triggered by Aldgate's acquisition of Volta \u2014 add to consent-collection worklist (Kessler-type risk).",
+          "liability_cap_usd": "Clause 4: 'PROVIDER'S AGGREGATE LIABILITY SHALL NOT EXCEED ... ($500,000) OR THE FEES PAID IN THE PRIOR 12 MONTHS, WHICHEVER IS GREATER, PROVIDED THE CAP SHALL IN NO EVENT EXCEED $500,000.' The overriding proviso fixes an absolute ceiling of $500,000, neutralising the 'greater of' fees limb. No amendment present. No carve-outs (confidentiality/IP/indemnity) appear in the provided text.",
+          "governing_law": "Clause 7: 'governed by the laws of the State of California.' Governing law, not venue.",
+          "risk_tier": "Red-flag re-check: (1) change-of-control consent present (Clause 5) = yes; (2) no liability cap = no, $500,000 cap stated (Clause 4). Exactly one of two red flags present -> MEDIUM. Not HIGH because liability is capped."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 36.17387025000062,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18435,
+          "cw": 0,
+          "cr": 0,
+          "out": 2970
+        }
+      },
+      "cost": 0.166425
+    },
+    {
+      "id": "C-104",
+      "fields": {
+        "auto_renewal": false,
+        "change_of_control": true,
+        "liability_cap_usd": null,
+        "governing_law": "England and Wales",
+        "risk_tier": "HIGH",
+        "evidence": {
+          "auto_renewal": "Section 2: 'Twelve (12) months ... terminating automatically at expiry. Renewal only by mutual written agreement.' Fixed-term-with-mutual-agreement-renewal pattern \u2014 expires, not evergreen. No notice window.",
+          "change_of_control": "Section 5: 'Ironclad may terminate this Agreement on thirty (30) days' notice upon any change of control of Principal' (termination right = true) AND 'Any assignment by either party requires the prior written consent of the other' (consent restriction). Deal alert: Aldgate's acquisition of Volta is itself a change of control of Principal, directly triggering Ironclad's 30-day termination right \u2014 Kessler-Tooling-type, Day-1 escalation.",
+          "liability_cap_usd": "Section 4: Agreement 'does not otherwise state any cap, ceiling, or other limitation on either party's liability' \u2014 express uncapped statement, not silence. Section 3: both indemnities 'uncapped' and survive six years; carve-outs do not set the cap figure but compound exposure given no general cap. No amendments attached to override/restore a cap.",
+          "governing_law": "Section 7: 'governed by the laws of England and Wales' \u2014 governing law, not venue.",
+          "risk_tier": "Both audited red flags present: change-of-control termination/consent right (Section 5) AND no liability cap (Section 4, express uncapped). Worst-case clause stack compounded by uncapped mutual indemnities (Section 3). => HIGH."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 33.77055199997267,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18208,
+          "cw": 0,
+          "cr": 0,
+          "out": 2677
+        }
+      },
+      "cost": 0.157965
+    },
+    {
+      "id": "C-105",
+      "fields": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": null,
+        "governing_law": "Texas",
+        "risk_tier": "HIGH",
+        "evidence": {
+          "auto_renewal": "Section 2: 'automatically extending for successive twelve-month periods unless either party gives one hundred twenty (120) days' notice.' Genuine evergreen; 120-day window exceeds the 90-day integration runway (no watch-list flag).",
+          "change_of_control": "Section 5: 'Any direct or indirect change of control of Buyer requires Helios's prior written consent. Helios may withhold consent in its sole discretion.' Hard consent right, aggravated by sole-discretion withholding; directly triggered by Aldgate's acquisition of Volta.",
+          "liability_cap_usd": "Section 4 originally set a $1,000,000 aggregate cap (subject to Section 9 IP indemnity carve-out), but Amendment No. 2 (executed and effective) deletes Section 4 'in its entirety' and states 'the Agreement states no cap on either party's liability.' Amendment controls; reported null, not $1,000,000.",
+          "governing_law": "Section 7: 'governed by the laws of the State of Texas.' Governing law, not venue.",
+          "risk_tier": "Both red flags present: change-of-control consent right (Section 5) AND no liability cap (Section 4 deleted by Amendment No. 2). Per the rule, HIGH. Day-1 escalation candidate."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 28.18390312505653,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18151,
+          "cw": 0,
+          "cr": 0,
+          "out": 2307
+        }
+      },
+      "cost": 0.14843
+    },
+    {
+      "id": "C-106",
+      "fields": {
+        "auto_renewal": true,
+        "change_of_control": false,
+        "liability_cap_usd": null,
+        "governing_law": "Illinois",
+        "risk_tier": "MEDIUM",
+        "evidence": {
+          "auto_renewal": "\u00a72: 'renewing automatically for successive one-year terms unless either party gives thirty (30) days' written notice prior to renewal.' Genuine evergreen (not mutual-agreement). Notice window is exactly 30 days \u2014 tight against the 90-day integration preference; flag for integration calendar, though not sub-30 so not on strict watch list.",
+          "change_of_control": "\u00a75: 'Either party may assign this Agreement without the other party's consent, including in connection with a change of control, provided the assignee assumes all obligations.' Free assignment with express CoC permission \u2014 no consent requirement, no termination right. NOT a change-of-control restriction. Favorable: the Aldgate acquisition will not trigger this contract.",
+          "liability_cap_usd": "\u00a76: 'THE PARTIES HAVE NOT AGREED ANY LIMITATION OR CAP ON LIABILITY UNDER THIS AGREEMENT.' Express uncapped liability \u2192 null. No amendment present to override. Material exposure given \u00a74 employer-of-record structure (wage/withholding/injury claims route through this contract).",
+          "governing_law": "\u00a77: 'governed by the laws of the State of Illinois.' Governing law, not venue.",
+          "risk_tier": "Red-flag pre-check: no change-of-control restriction (\u00a75 free assignment) AND no liability cap (\u00a76 expressly uncapped \u2192 null). Exactly one of the two red flags present (uncapped liability) \u2192 MEDIUM.",
+          "notable_absences": "No indemnity, insurance, termination-for-convenience, or confidentiality clause. Thin agreement; nothing overrides the uncapped liability position."
+        }
+      },
+      "checks": {
+        "auto_renewal": true,
+        "change_of_control": true,
+        "liability_cap_usd": true,
+        "governing_law": true,
+        "risk_tier": true
+      },
+      "n_correct": 5,
+      "n_fields": 5,
+      "elapsed": 34.07882633298868,
+      "tokens": {
+        "claude-opus-4-8": {
+          "calls": 2,
+          "in": 18270,
+          "cw": 0,
+          "cr": 0,
+          "out": 2772
+        }
+      },
+      "cost": 0.16065
+    }
+  ],
+  "wall_s": 200.4569067079574,
+  "accuracy": 1.0,
+  "p50_s": 33.94459224998718,
+  "cost_per_contract": 0.15851583333333333
+}
