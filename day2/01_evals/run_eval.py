@@ -16,10 +16,13 @@ Stages:
   heldout   --runs N of the 10 held-out tasks (never used to tune the agent)
   heldout2  --runs N of the 8 negative/adversarial held-out tasks (also never tuned on)
 
+CI gate: add --min-pass-rate 0.9 to exit 1 when the mean pass rate drops below 90%.
+
 Credentials: ANTHROPIC_API_KEY in the environment or in a .env file, same as the notebook.
 """
 import argparse
 import json
+import sys
 from collections import defaultdict
 
 SETUP_CELLS = (
@@ -61,6 +64,12 @@ def print_pass_rates(results):
     print(f"\nPassed per run: {per_run} of {results['config']['num_tasks']} tasks")
 
 
+def mean_pass_rate(results):
+    """Fraction of task attempts that passed, across every task and every run."""
+    outcomes = [r["passed"] for run in results["runs"] for r in run]
+    return sum(outcomes) / len(outcomes)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("stage", choices=("sanity", "single", "baseline", *HELDOUT_SETS))
@@ -70,7 +79,12 @@ def main():
     parser.add_argument("--tasks-notebook", default=None,
                         help="notebook to read held-out tasks from (default: --notebook); "
                              "use with an older notebook to score a previous agent on the same tasks")
+    parser.add_argument("--min-pass-rate", type=float, default=None, metavar="RATE",
+                        help="exit 1 if the mean pass rate (0 to 1, across all tasks and runs) is below RATE; "
+                             "for CI. Runs that error out count as failed. Ignored for the sanity stage")
     args = parser.parse_args()
+    if args.min_pass_rate is not None and not 0 <= args.min_pass_rate <= 1:
+        parser.error("--min-pass-rate must be between 0 and 1")
 
     cells = load_code_cells(args.notebook)
     ns = {"__name__": "__main__"}
@@ -98,6 +112,11 @@ def main():
         ns["print_summary"](results)
     else:
         print_pass_rates(results)
+
+    rate = mean_pass_rate(results)
+    print(f"Mean pass rate: {rate:.1%}")
+    if args.min_pass_rate is not None and rate < args.min_pass_rate:
+        sys.exit(f"FAIL: mean pass rate {rate:.1%} is below the minimum {args.min_pass_rate:.1%}")
 
 
 if __name__ == "__main__":

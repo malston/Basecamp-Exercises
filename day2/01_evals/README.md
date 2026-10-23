@@ -50,4 +50,4 @@ The setup cell verifies your key with a real API call — green banner means you
 .venv/bin/python run_eval.py --help              # all options
 ```
 
-Your key comes from `ANTHROPIC_API_KEY` or a `.env` file, same as the notebook. Each run saves a JSON file to `eval_results/`.
+For CI, add `--min-pass-rate 0.9` to exit 1 when the mean pass rate (across all tasks and runs) falls below 90%. Your key comes from `ANTHROPIC_API_KEY` or a `.env` file, same as the notebook. Each run saves a JSON file to `eval_results/`.
