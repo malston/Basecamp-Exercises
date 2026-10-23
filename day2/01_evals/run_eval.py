@@ -15,8 +15,9 @@ Stages:
   sanity    grader sanity checks only (hand-written answers with known verdicts); exits 1 if any grader misjudges
   single    one run of the 32-task suite (25 deterministic + 7 LLM-judge)
   baseline  --runs N of the 32-task suite, per-task pass rates printed
-  heldout   --runs N of the 10 held-out tasks (never used to tune the agent)
+  heldout   --runs N of the 10 held-out tasks in set 1 (never used to tune the agent)
   heldout2  --runs N of the 8 negative/adversarial held-out tasks (also never tuned on)
+  heldout3  --runs N of the 10 everyday held-out tasks (also never tuned on)
 
 The notebook's Part 4 cells run only the 25 deterministic tasks, so their totals differ from single and baseline.
 
@@ -44,6 +45,7 @@ SETUP_CELLS = (
 HELDOUT_SETS = {
     "heldout": ("# Held-out tasks", "heldout_tasks"),
     "heldout2": ("# Held-out set 2", "heldout_tasks_2"),
+    "heldout3": ("# Held-out set 3", "heldout_tasks_3"),
 }
 
 
@@ -90,7 +92,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("stage", choices=("sanity", "single", "baseline", *HELDOUT_SETS))
     parser.add_argument("--runs", type=int, default=5,
-                        help="runs for baseline, heldout and heldout2 (default 5; ignored by sanity and single)")
+                        help="runs for baseline and the heldout stages (default 5; ignored by sanity and single)")
     parser.add_argument("--notebook", default="Building_an_Eval_solution.ipynb",
                         help="notebook holding the agent and graders (default: Building_an_Eval_solution.ipynb)")
     parser.add_argument("--tasks-notebook", default=None,

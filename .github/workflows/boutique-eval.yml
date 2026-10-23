@@ -2,8 +2,8 @@
 #   regression: on pull requests that touch the exercise, and on manual dispatch, runs the offline
 #               unit tests, the grader sanity checks, then the 32-task suite 3 times, and fails the
 #               check if the mean pass rate is below MIN_PASS_RATE or any attempt errored.
-#   heldout:    nightly (and on demand), runs both held-out sets and reports the scores without
-#               failing the build on them. A crash or a missing key still fails the job.
+#   heldout:    nightly (and on demand), runs all three held-out sets and reports the scores
+#               without failing the build on them. A crash or a missing key still fails the job.
 # Needs the repository secret ANTHROPIC_API_KEY. A missing key fails the job on same-repo runs.
 # Pull requests from forks get no secrets: the regression job runs only the offline unit tests,
 # writes "NOT RUN" to the job summary and reports success without running the eval.
@@ -118,7 +118,7 @@ jobs:
             echo "::error::ANTHROPIC_API_KEY is not set. Add it as a repository secret."
             exit 1
           fi
-          for stage in heldout heldout2; do
+          for stage in heldout heldout2 heldout3; do
             out="$RUNNER_TEMP/$stage.txt"
             if ! .venv/bin/python -I run_eval.py "$stage" --runs 3 > "$out" 2>&1; then
               cat "$out"
@@ -128,7 +128,7 @@ jobs:
           done
           {
             echo '## Held-out scores'
-            for stage in heldout heldout2; do
+            for stage in heldout heldout2 heldout3; do
               echo "### $stage"
               echo '```'
               sed -n '/Per-task pass rate/,$p' "$RUNNER_TEMP/$stage.txt"

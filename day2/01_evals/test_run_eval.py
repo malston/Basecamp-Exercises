@@ -74,7 +74,9 @@ class TaskDefinitionTest(unittest.TestCase):
             for marker, _ in run_eval.HELDOUT_SETS.values():
                 exec(run_eval.find_cell(cells, marker), ns)
         cls.ns = ns
-        cls.all_tasks = ns["tasks"] + ns["llm_judge_tasks"] + ns["heldout_tasks"] + ns["heldout_tasks_2"]
+        cls.all_tasks = ns["tasks"] + ns["llm_judge_tasks"] + [
+            t for _, var in run_eval.HELDOUT_SETS.values() for t in ns[var]
+        ]
         sanity = run_eval.find_cell(cells, "# Grader sanity checks")
         exec(sanity.split("failures = 0")[0], ns)
 
@@ -82,6 +84,13 @@ class TaskDefinitionTest(unittest.TestCase):
         self.assertEqual(len(self.ns["tasks"]) + len(self.ns["llm_judge_tasks"]), 32)
         self.assertEqual(len(self.ns["heldout_tasks"]), 10)
         self.assertEqual(len(self.ns["heldout_tasks_2"]), 8)
+        self.assertEqual(len(self.ns["heldout_tasks_3"]), 10)
+
+    def test_every_heldout_stage_defines_its_variable(self):
+        for stage, (_, var) in run_eval.HELDOUT_SETS.items():
+            with self.subTest(stage=stage):
+                self.assertIsInstance(self.ns[var], list)
+                self.assertTrue(self.ns[var])
 
     def test_ids_and_queries_are_unique(self):
         ids = [t["id"] for t in self.all_tasks]
@@ -104,6 +113,42 @@ class TaskDefinitionTest(unittest.TestCase):
                     for check in grader["checks"]:
                         with self.subTest(task=task["id"]):
                             self.assertIn(check["tool_name"], VALID_TOOLS)
+
+    def deterministic_passes(self, task_id, text, tool_calls):
+        """True when every non-judge check of the task passes for a hand-written answer."""
+        task = next(t for t in self.all_tasks if t["id"] == task_id)
+        result = {"final_text": text, "tool_calls": tool_calls}
+        registry = self.ns["GRADER_REGISTRY"]
+        return all(
+            registry[g["type"]](result, check, {})["score"] == 1.0
+            for g in task["graders"] if g["type"] != "llm_judge"
+            for check in g["checks"]
+        )
+
+    def test_held_out_set_3_answers(self):
+        def call(product):
+            return {"name": "get_product", "arguments": {"product": product}}
+        calc = {"name": "calculate", "arguments": {}}
+        basket = [call("dress"), call("hoodie"), calc]
+        cases = [
+            ("ho3_discount_basket", "That comes to $78.74.", basket, True),
+            ("ho3_discount_basket", "That comes to $78.73.", basket, True),
+            ("ho3_discount_basket", "That comes to $78.75.", basket, False),
+            ("ho3_discount_basket", "That comes to $104.98.", basket, False),
+            ("ho3_percent_of_price", "15% of the jacket price is $13.50.", [call("jacket"), calc], True),
+            ("ho3_percent_of_price", "15% of the jacket price is $76.49.", [call("jacket"), calc], False),
+            ("ho3_change_from_fifty", "Your change is $15.02.", [call("socks"), call("belt"), calc], True),
+            ("ho3_change_from_fifty", "Your change is $16.02.", [call("socks"), call("belt"), calc], False),
+            ("ho3_two_prices", "A shirt is $29.99 and a dress is $59.99.", [call("shirt"), call("dress")], True),
+            ("ho3_two_prices", "A shirt is $29.99 and a dress is $59.99.", [call("shirt")], False),
+            ("ho3_most_expensive", "The jacket, at $89.99.", [call("jacket")], False),
+            ("ho3_most_expensive", "The jacket, at $89.99.",
+             [call(p) for p in ("jeans", "shirt", "dress", "jacket", "sneakers", "hat",
+                                "socks", "hoodie", "shorts", "t-shirt", "sweater", "belt")], True),
+        ]
+        for task_id, text, calls, expected in cases:
+            with self.subTest(task=task_id, text=text, calls=len(calls)):
+                self.assertEqual(self.deterministic_passes(task_id, text, calls), expected)
 
     def test_deterministic_grader_sanity_cases(self):
         registry = self.ns["GRADER_REGISTRY"]
