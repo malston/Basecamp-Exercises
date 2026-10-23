@@ -106,3 +106,13 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 - `run_eval.py --min-pass-rate RATE` added (exit 1 below RATE, exit 2 for a bad value). Tested with real runs (pass, fail, bad value) and an offline check of the rate function.
 - Workflow `.github/workflows/boutique-eval.yml` (repo root). `regression` job on PRs touching day2/01_evals: sanity stage, then `baseline --runs 3 --min-pass-rate 0.9`. `heldout` job nightly and on demand: runs both held-out sets, report only, never fails the build on a score.
 - Validated YAML syntax only. NOT run on GitHub yet. Needs the repo secret ANTHROPIC_API_KEY; fork PRs have no secrets and skip the eval with a warning.
+
+## Change 4: rounding line in the system prompt (from the CI failure)
+- Trigger: CI run (3 runs) failed split_jacket once. Transcript from the artifact: tools called correctly, `calculate` returned 29.996666..., agent wrote "$29.97" (should be $30.00). A model rounding error in the final text; the grader was right.
+- One change: appended "Round money amounts to the nearest cent." to the system prompt. No other change.
+- split_jacket alone, 30 runs each, serial: before 27/30 (all 3 misses were "$29.97"), after 30/30.
+- Full 32-task suite x5 after: [32, 32, 32, 32, 32], mean 100%. No regression.
+- Held-out set 1 x5 after (report only, not tuned on): [10, 10, 10, 10, 9], mean 98% (was 9.6/10 = 96%).
+- Held-out set 2 x5 after (report only): [7, 7, 8, 8, 8], mean 95% (was 7.4/8 = 92.5%).
+- Caveat: 27/30 vs 30/30 is a small sample (3 misses vs 0; not statistically conclusive on its own). The mechanism supports it: every earlier miss was the same rounding slip, and the new line targets exactly that. The held-out sets did not get worse.
+- Result files from the scratch measurements were not saved; full-suite and held-out result JSONs are in eval_results/.
