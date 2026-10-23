@@ -45,7 +45,7 @@ The setup cell verifies your key with a real API call — green banner means you
 python run_eval.py sanity              # grader sanity checks only
 python run_eval.py single              # one run of the 32-task suite
 python run_eval.py baseline --runs 5   # 5 runs, per-task pass rates
-python run_eval.py heldout --runs 5    # the 10 held-out tasks
+python run_eval.py heldout --runs 5    # the 10 held-out tasks (set 1)
 python run_eval.py heldout2 --runs 5   # 8 negative and adversarial held-out tasks
 python run_eval.py heldout3 --runs 5   # 10 everyday held-out tasks
 python run_eval.py --help              # all options

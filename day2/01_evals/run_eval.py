@@ -15,7 +15,7 @@ Stages:
   sanity    grader sanity checks only (hand-written answers with known verdicts); exits 1 if any grader misjudges
   single    one run of the 32-task suite (25 deterministic + 7 LLM-judge)
   baseline  --runs N of the 32-task suite, per-task pass rates printed
-  heldout   --runs N of the 10 held-out tasks (never used to tune the agent)
+  heldout   --runs N of the 10 held-out tasks in set 1 (never used to tune the agent)
   heldout2  --runs N of the 8 negative/adversarial held-out tasks (also never tuned on)
   heldout3  --runs N of the 10 everyday held-out tasks (also never tuned on)
 

@@ -2,8 +2,8 @@
 #   regression: on pull requests that touch the exercise, and on manual dispatch, runs the offline
 #               unit tests, the grader sanity checks, then the 32-task suite 3 times, and fails the
 #               check if the mean pass rate is below MIN_PASS_RATE or any attempt errored.
-#   heldout:    nightly (and on demand), runs both held-out sets and reports the scores without
-#               failing the build on them. A crash or a missing key still fails the job.
+#   heldout:    nightly (and on demand), runs all three held-out sets and reports the scores
+#               without failing the build on them. A crash or a missing key still fails the job.
 # Needs the repository secret ANTHROPIC_API_KEY. A missing key fails the job on same-repo runs.
 # Pull requests from forks get no secrets: the regression job runs only the offline unit tests,
 # writes "NOT RUN" to the job summary and reports success without running the eval.

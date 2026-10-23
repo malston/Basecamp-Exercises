@@ -104,7 +104,7 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 
 ## CI
 - `run_eval.py --min-pass-rate RATE` added (exit 1 below RATE, exit 2 for a bad value). Tested with real runs (pass, fail, bad value) and an offline check of the rate function.
-- Workflow `.github/workflows/boutique-eval.yml` (repo root). `regression` job on PRs touching day2/01_evals: sanity stage, then `baseline --runs 3 --min-pass-rate 0.9`. `heldout` job nightly and on demand: runs both held-out sets, report only, never fails the build on a score.
+- Workflow `.github/workflows/boutique-eval.yml` (repo root). `regression` job on PRs touching day2/01_evals: sanity stage, then `baseline --runs 3 --min-pass-rate 0.9`. `heldout` job nightly and on demand: runs the held-out sets (heldout, heldout2, heldout3), report only, never fails the build on a score.
 - Needs the repo secret ANTHROPIC_API_KEY. Fork PRs have no secrets: the regression job runs only the offline unit tests and writes NOT RUN to the job summary. First run on GitHub is the PR #1 check described under Change 4.
 
 ## Change 4: rounding line in the system prompt (from the CI failure)
@@ -143,8 +143,12 @@ Verification after the fixes: unit tests 11/11, sanity passes, full suite [32, 3
 ## Exercise notebook restored
 - The merge of PR #1 replaced the exercise notebook with the solved one. `Building_an_Eval.ipynb` is restored to its pre-merge exercise form (commit a4efc87); the solved notebook now lives at `Building_an_Eval_solution.ipynb`. `run_eval.py`, the unit tests and CI default to the solution notebook. The measurements above were taken on the solved notebook.
 
-## Held-out set 3: everyday tasks (10 tasks, written after set 1 and 2, never tuned on)
-- Purpose: check that the 9.6/10 on held-out set 1 was not a one-off. Fresh phrasings of totals, discounts, tax, change, comparisons, a max-price lookup and an order-of-operations question. Notebook cell "Held-out set 3" in `Building_an_Eval_solution.ipynb`; stage `heldout3` in run_eval.py; added to the nightly CI job.
-- Fixed agent, 5 runs: [10, 10, 10, 10, 10] of 10 (100%). Original agent (same graders): [7, 8, 7, 7, 8] (mean 7.4/10, 74%).
-- Original agent misses: ho3_most_expensive 0/5, ho3_discount_basket 1/5, ho3_change_from_fifty 1/5. Same pattern as before: with a one-line prompt and bare tool descriptions it often asks the customer for prices or skips the lookups.
-- Set 1 and set 3 agree (original 7.4/10 both times; fixed 9.6 and 10), so the gain from the prompt and tool-description fixes holds up on fresh questions. Set 2 (negative tasks) still shows no gain.
+## Held-out set 3: everyday tasks (10 tasks, written after sets 1 and 2, never tuned on)
+- Purpose: a second set of everyday questions to compare with held-out set 1 (9.6/10 fixed, 7.4/10 original). New phrasings of totals, discounts, tax, change, comparisons, a max-price lookup and an order-of-operations question. Notebook cell "Held-out set 3" in `Building_an_Eval_solution.ipynb`; stage `heldout3` in run_eval.py; included in the nightly CI report.
+- First run, fixed agent, 5 runs: [10, 10, 10, 10, 10] of 10. Original agent (graders from the solution notebook, agent cell from commit d6c5851, via `--notebook`): [7, 8, 7, 7, 8], mean 7.4/10.
+- PR review finding: three set 3 tasks repeat set 1 scenarios (ho3_most_expensive ~ ho_cheapest_item, ho3_change_from_fifty ~ ho_change_from_forty, ho3_discount_basket ~ ho_discount_two_items). The original agent scored 2/15 on those three and 35/35 on the seven new scenarios; the fixed agent scored 15/15 and 35/35. So set 3 shows the set 1 failure modes recurring. It does not show a gain on new kinds of question, because the original agent was already perfect there. An earlier version of this entry said the gain "holds up on fresh questions"; that overstated what the data shows.
+- The original agent's ho3_most_expensive misses are "I can't browse the catalog" with no lookups, not requests for prices.
+- Tasks tightened after results were seen (at Mark's request, to close grading gaps found in review): ho3_which_costs_more now has a judge check on direction ("the sweater costs more than the jeans") and tool_use checks for sweater and jeans; ho3_two_prices adds a judge check and tool_use checks for shirt and dress; ho3_most_expensive now requires get_product calls for all 12 catalog items. The fixed agent still passes all of them.
+- Re-run with the tightened tasks: fixed agent [10, 10, 10, 10, 10] (100%); original agent [7, 9, 8, 8, 7] (mean 7.8/10). Misses: ho3_most_expensive 0/5, ho3_discount_basket 2/5, ho3_change_from_fifty 2/5, all on the repeated scenarios.
+- Because tasks were edited after seeing results, set 3 is no longer a clean held-out set. Write a fresh set 4 with no mirrored scenarios for a real replication.
+- Tests added: every HELDOUT_SETS stage must define its variable; the union of all tasks is built from HELDOUT_SETS; golden answers for four set 3 tasks (boundary roundings, wrong totals, missing lookups).
