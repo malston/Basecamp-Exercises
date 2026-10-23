@@ -1,0 +1,110 @@
+# Boutique agent eval.
+#   regression: on pull requests that touch the exercise, runs the 32-task suite 3 times and
+#               fails the check if the mean pass rate is below MIN_PASS_RATE.
+#   heldout:    nightly (and on demand), runs both held-out sets and reports the scores.
+#               It never fails the build on a score: reading these failures to tune the agent
+#               would turn the held-out tasks into practice material.
+# Needs the repository secret ANTHROPIC_API_KEY. Pull requests from forks get no secrets,
+# so the regression job skips itself there.
+name: boutique-eval
+
+on:
+  pull_request:
+    paths:
+      - "day2/01_evals/**"
+      - ".github/workflows/boutique-eval.yml"
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boutique-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: day2/01_evals
+
+env:
+  MIN_PASS_RATE: "0.9"
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+jobs:
+  regression:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for API key
+        id: key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not available (pull request from a fork?). Skipping the eval."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.key.outputs.available == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Create venv (the notebook's setup cell refuses to install outside one)
+        if: steps.key.outputs.available == 'true'
+        run: python -m venv .venv
+
+      - name: Grader sanity checks
+        if: steps.key.outputs.available == 'true'
+        run: .venv/bin/python -I run_eval.py sanity
+
+      - name: Regression suite
+        if: steps.key.outputs.available == 'true'
+        run: .venv/bin/python -I run_eval.py baseline --runs 3 --min-pass-rate "$MIN_PASS_RATE"
+
+      - name: Upload results
+        if: always() && steps.key.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-regression
+          path: day2/01_evals/eval_results/
+          if-no-files-found: ignore
+
+  heldout:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create venv
+        run: python -m venv .venv
+
+      - name: Held-out sets (report only)
+        run: |
+          {
+            echo '## Held-out scores'
+            for stage in heldout heldout2; do
+              echo "### $stage"
+              echo '```'
+              .venv/bin/python -I run_eval.py "$stage" --runs 3 | sed -n '/Per-task pass rate/,$p'
+              echo '```'
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-heldout
+          path: day2/01_evals/eval_results/
+          if-no-files-found: ignore

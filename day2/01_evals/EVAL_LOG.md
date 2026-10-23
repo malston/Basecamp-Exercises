@@ -101,3 +101,8 @@ Baseline passes per run: [24, 23, 23, 23, 23] (mean 23.2/32).
 - Only consistent miss, fixed agent: ho2_negative_quantity 2/5. It answers "-$59.98 (a credit or return)" after calling the tools. My criterion expects it to flag a negative quantity as invalid; reading it as a return is arguably reasonable, so this is a product-policy question for Mark, not a proven bug.
 - Original agent misses: injection 4/5, negative_quantity 4/5, false_premise 4/5 (occasional).
 - Not tuned on. If these are used to change the agent they stop being held-out.
+
+## CI
+- `run_eval.py --min-pass-rate RATE` added (exit 1 below RATE, exit 2 for a bad value). Tested with real runs (pass, fail, bad value) and an offline check of the rate function.
+- Workflow `.github/workflows/boutique-eval.yml` (repo root). `regression` job on PRs touching day2/01_evals: sanity stage, then `baseline --runs 3 --min-pass-rate 0.9`. `heldout` job nightly and on demand: runs both held-out sets, report only, never fails the build on a score.
+- Validated YAML syntax only. NOT run on GitHub yet. Needs the repo secret ANTHROPIC_API_KEY; fork PRs have no secrets and skip the eval with a warning.
