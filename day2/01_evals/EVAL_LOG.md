@@ -139,3 +139,6 @@ Not fixed (suggestions or judgment calls):
 - Unpinned `anthropic` in CI; the `$` check in ho2_single_char can fail a correct reply that cites a real price; held-out tasks left untouched on purpose.
 - Merging puts the solved notebook on main, replacing the participant scaffolding. Flagged to Mark.
 Verification after the fixes: unit tests 11/11, sanity passes, full suite [32, 32, 32, 32, 32] at exit 0 with --min-pass-rate 0.97, held-out 1 mean 9.6/10, held-out 2 mean 7.4/8 (unchanged).
+
+## Exercise notebook restored
+- The merge of PR #1 replaced the exercise notebook with the solved one. `Building_an_Eval.ipynb` is restored to its pre-merge exercise form (commit a4efc87); the solved notebook now lives at `Building_an_Eval_solution.ipynb`. `run_eval.py`, the unit tests and CI default to the solution notebook. The measurements above were taken on the solved notebook.

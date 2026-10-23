@@ -12,7 +12,7 @@ import unittest
 
 import run_eval
 
-NOTEBOOK = "Building_an_Eval.ipynb"
+NOTEBOOK = "Building_an_Eval_solution.ipynb"
 VALID_TOOLS = {"get_product", "calculate"}
 
 

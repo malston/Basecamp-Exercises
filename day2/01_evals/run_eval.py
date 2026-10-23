@@ -2,7 +2,7 @@
 """Run the boutique eval from a shell, without opening Jupyter.
 
 Use when: you want to run the eval from a terminal or script. It executes the
-notebook's setup, agent, grader and runner cells (skipping the interactive chat
+solution notebook's (Building_an_Eval_solution.ipynb) setup, agent, grader and runner cells (skipping the interactive chat
 cell) and runs one stage. Every stage except sanity saves its results to
 eval_results/ as JSON.
 
@@ -91,8 +91,8 @@ def main():
     parser.add_argument("stage", choices=("sanity", "single", "baseline", *HELDOUT_SETS))
     parser.add_argument("--runs", type=int, default=5,
                         help="runs for baseline, heldout and heldout2 (default 5; ignored by sanity and single)")
-    parser.add_argument("--notebook", default="Building_an_Eval.ipynb",
-                        help="notebook holding the agent and graders (default: Building_an_Eval.ipynb)")
+    parser.add_argument("--notebook", default="Building_an_Eval_solution.ipynb",
+                        help="notebook holding the agent and graders (default: Building_an_Eval_solution.ipynb)")
     parser.add_argument("--tasks-notebook", default=None,
                         help="notebook to read held-out tasks from (default: --notebook). Combine with a different "
                              "--notebook to score another agent on the same tasks; graders come from --notebook, "
