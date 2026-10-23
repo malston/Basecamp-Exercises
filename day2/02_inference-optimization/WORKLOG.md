@@ -132,3 +132,7 @@ The job was "make it fast and cheap, and be able to defend it." The defending to
 Also worth knowing: newer, cheaper models exist (Sonnet 5.5 at the same price, Haiku 5.5 at $0.10/$0.50). The exercise's models were right to keep for comparability, but on a real engagement "what is current" is step one.
 
 How to rerun: `cd day2/02_inference-optimization`, then `python3 run_clausescan.py run --single-pass --cache --routine-model sonnet --effort low --max-tokens 1000 --repeats 3`, then `python3 run_clausescan.py slide`. Add `--stress` or `--holdout` to change the data set. `--help` lists everything.
+
+## 2026-10-23 -- Upstream PR
+
+Opened https://github.com/victorsteeb/Basecamp-Exercises/pull/27 (branch malston:fix-sonnet-5-pricing, based on upstream main 1996d1b): Sonnet 5 price corrected to $2/$10 in Inference_Optimization .py/.ipynb and Diagnose_Fix_Brief.py. Created through the GitHub API because local git add/commit is blocked in this session. Cache-minimum comment (2048 vs 1024 for Sonnet 5) left for a follow-up.
