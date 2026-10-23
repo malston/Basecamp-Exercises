@@ -424,7 +424,7 @@ print(f"TTFT {ttft*1000:.0f}ms · TTC {total*1000:.0f}ms · OTPS {otps:.1f} tok/
 # | Model | Input $/MTok | Output $/MTok |
 # |---|---|---|
 # | Haiku 4.5 | $1.00 | $5.00 |
-# | Sonnet 5 | $3.00 | $15.00 |
+# | Sonnet 5 | $2.00 | $10.00 |
 # | Opus 4.8 | $5.00 | $25.00 |
 #
 # *(Verify against the pricing page before quoting in a deliverable — table cached June 2026.
@@ -433,7 +433,7 @@ print(f"TTFT {ttft*1000:.0f}ms · TTC {total*1000:.0f}ms · OTPS {otps:.1f} tok/
 # %%
 PRICING = {
     MODEL_HAIKU:  {"input": 1.00, "output": 5.00},
-    MODEL_SONNET: {"input": 3.00, "output": 15.00},
+    MODEL_SONNET: {"input": 2.00, "output": 10.00},
     MODEL_OPUS:   {"input": 5.00, "output": 25.00},
 }
 CACHE_WRITE_MULT = 1.25   # 5-minute TTL cache writes
