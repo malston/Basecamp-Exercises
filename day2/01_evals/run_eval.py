@@ -14,6 +14,7 @@ Stages:
   single    one run of the 32-task suite (25 deterministic + 7 LLM-judge)
   baseline  --runs N of the 32-task suite, per-task pass rates printed
   heldout   --runs N of the 10 held-out tasks (never used to tune the agent)
+  heldout2  --runs N of the 8 negative/adversarial held-out tasks (also never tuned on)
 
 Credentials: ANTHROPIC_API_KEY in the environment or in a .env file, same as the notebook.
 """
@@ -30,6 +31,12 @@ SETUP_CELLS = (
     "# ✏️ YOUR TURN",
     "# Implement the LLM-as-judge grader",
 )
+
+
+HELDOUT_SETS = {
+    "heldout": ("# Held-out tasks", "heldout_tasks"),
+    "heldout2": ("# Held-out set 2", "heldout_tasks_2"),
+}
 
 
 def load_code_cells(path):
@@ -56,7 +63,7 @@ def print_pass_rates(results):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("stage", choices=("sanity", "single", "baseline", "heldout"))
+    parser.add_argument("stage", choices=("sanity", "single", "baseline", *HELDOUT_SETS))
     parser.add_argument("--runs", type=int, default=5, help="runs for baseline/heldout (default 5)")
     parser.add_argument("--notebook", default="Building_an_Eval.ipynb",
                         help="notebook holding the agent and graders (default: Building_an_Eval.ipynb)")
@@ -74,10 +81,11 @@ def main():
         exec(compile(find_cell(cells, "# Grader sanity checks"), "sanity", "exec"), ns)
         return
 
-    if args.stage == "heldout":
+    if args.stage in HELDOUT_SETS:
+        marker, var = HELDOUT_SETS[args.stage]
         task_cells = load_code_cells(args.tasks_notebook or args.notebook)
-        exec(compile(find_cell(task_cells, "# Held-out tasks"), "heldout", "exec"), ns)
-        tasks, runs = ns["heldout_tasks"], args.runs
+        exec(compile(find_cell(task_cells, marker), args.stage, "exec"), ns)
+        tasks, runs = ns[var], args.runs
     else:
         judge_cell = find_cell(cells, "# Add tasks that use the LLM-as-judge grader")
         exec(compile(judge_cell.split("# Run eval with both task sets")[0], "judge_tasks", "exec"), ns)
